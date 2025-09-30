@@ -1,0 +1,50 @@
+# Render deployment configuration
+#
+# This file defines multiple services:
+# 1. Web Service - FastAPI backend
+# 2. Background Worker - Celery worker
+# 3. Redis - Message queue
+
+services:
+  # FastAPI Web Service
+  - type: web
+    name: customer-insight-api
+    runtime: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: DATABASE_URL
+        sync: false
+      - key: SECRET_KEY
+        generateValue: true
+      - key: ALLOWED_ORIGINS
+        sync: false
+      - key: REDIS_URL
+        fromService:
+          type: redis
+          name: customer-insight-redis
+          property: connectionString
+    
+  # Celery Background Worker
+  - type: worker
+    name: customer-insight-worker
+    runtime: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: celery -A worker.celery_app worker --loglevel=info --concurrency=2
+    envVars:
+      - key: DATABASE_URL
+        sync: false
+      - key: SECRET_KEY
+        sync: false
+      - key: REDIS_URL
+        fromService:
+          type: redis
+          name: customer-insight-redis
+          property: connectionString
+  
+  # Redis for Celery
+  - type: redis
+    name: customer-insight-redis
+    plan: free
+    maxmemoryPolicy: noeviction
+    ipAllowList: []

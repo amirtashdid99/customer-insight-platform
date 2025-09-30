@@ -34,7 +34,7 @@ function App() {
       // Poll for completion
       const analysisId = jobResponse.analysis_id;
       let attempts = 0;
-      const maxAttempts = 60; // 2 minutes max
+      const maxAttempts = 30; // 1 minute max (30 attempts * 2 seconds)
 
       const pollInterval = setInterval(async () => {
         attempts++;

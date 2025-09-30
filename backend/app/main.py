@@ -61,7 +61,7 @@ app.add_middleware(
 )
 
 # Include routers
-app.include_router(analysis_router)
+app.include_router(analysis_router, prefix="/api")
 
 
 @app.get("/")

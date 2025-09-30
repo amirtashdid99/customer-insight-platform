@@ -30,3 +30,8 @@ nltk==3.9.1
 # Utilities
 python-dateutil==2.9.0
 httpx==0.28.1
+
+# Background Tasks & Queue
+redis==5.0.1
+celery==5.3.4
+flower==2.0.1
