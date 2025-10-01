@@ -95,12 +95,15 @@ Should return:
 - Vercel will auto-detect: `Create React App`
 
 **Root Directory:**
-- Set to: `frontend`
+- **IMPORTANT:** Set to: `frontend`
+- This tells Vercel to build from the frontend subdirectory
 
 **Build Settings:**
-- Build Command: `npm run build` (auto-detected)
-- Output Directory: `build` (auto-detected)
-- Install Command: `npm install` (auto-detected)
+- Build Command: `npm run build` (auto-detected, or leave empty to use vercel.json)
+- Output Directory: `build` (auto-detected, or leave empty to use vercel.json)
+- Install Command: `npm install` (auto-detected, or leave empty to use vercel.json)
+
+**Note:** The `vercel.json` file in the root will automatically configure these settings.
 
 ### Step 3: Set Environment Variables
 Add environment variable:
@@ -156,6 +159,24 @@ Replace with your actual Render backend URL (no trailing slash).
 - For production, consider PostgreSQL
 
 ### Frontend Issues
+
+**Build Error: "cd: frontend: No such file or directory"**
+- This happens when vercel.json has incorrect paths
+- **Solution:** Make sure you set **Root Directory** to `frontend` in Vercel settings
+- The vercel.json should have:
+  ```json
+  {
+    "buildCommand": "npm install && npm run build",
+    "outputDirectory": "build"
+  }
+  ```
+- NOT: `"buildCommand": "cd frontend && ..."`
+- Redeploy after fixing
+
+**npm Audit Warnings:**
+- You can safely ignore these during deployment
+- To fix locally: `cd frontend && npm audit fix`
+- These are just dependency warnings, not blocking errors
 
 **"Failed to fetch" or Network Errors:**
 - Check `REACT_APP_API_URL` is set correctly
