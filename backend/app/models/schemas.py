@@ -31,6 +31,15 @@ class CommentBase(BaseModel):
     posted_at: Optional[datetime] = None
 
 
+class ScrapedComment(BaseModel):
+    """Schema for scraped comments (used in scraping and demo mode)"""
+    text: str
+    source: str
+    source_url: str
+    author: str
+    posted_at: datetime
+
+
 class CommentResponse(CommentBase):
     id: int
     sentiment: Optional[SentimentType] = None
