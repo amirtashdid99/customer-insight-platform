@@ -24,7 +24,6 @@ from app.models.schemas import (
     CommentResponse,
     TopicResponse
 )
-from app.tasks.analysis_tasks import run_analysis_task
 from app.core.config import settings
 
 logger = logging.getLogger(__name__)
@@ -42,8 +41,9 @@ async def start_analysis(
     This endpoint:
     1. Creates or finds the product in the database
     2. Creates a new analysis record
-    3. Queues background task to Celery worker
-    4. Returns immediately with job ID
+    3. In DEMO mode: Runs synchronously with mock data (no Celery/Redis needed)
+    4. In FULL mode: Queues background task to Celery worker
+    5. Returns immediately with job ID
     """
     try:
         # Find or create product
@@ -65,16 +65,29 @@ async def start_analysis(
         db.commit()
         db.refresh(analysis)
         
-        # Queue Celery task (runs in background worker)
-        task = run_analysis_task.delay(analysis.id, request.product_name)
-        
-        logger.info(f"Queued analysis task {task.id} for analysis {analysis.id}")
+        # Choose execution mode based on DEMO_MODE setting
+        if settings.DEMO_MODE:
+            # DEMO MODE: Run synchronously without Celery/Redis
+            logger.info(f"Running analysis {analysis.id} in DEMO mode (no Celery)")
+            from app.tasks.analysis_tasks import run_analysis_sync
+            # Run in background to avoid blocking the API response
+            import asyncio
+            asyncio.create_task(
+                asyncio.to_thread(run_analysis_sync, analysis.id, request.product_name)
+            )
+            estimated_time = 5  # Demo mode is faster
+        else:
+            # FULL MODE: Queue to Celery worker (requires Redis)
+            from app.tasks.analysis_tasks import run_analysis_task
+            task = run_analysis_task.delay(analysis.id, request.product_name)
+            logger.info(f"Queued analysis task {task.id} for analysis {analysis.id}")
+            estimated_time = 90  # Real scraping takes longer
         
         return AnalysisJobResponse(
             message=f"Analysis started for '{request.product_name}'",
             analysis_id=analysis.id,
             status=analysis.status,
-            estimated_time_seconds=90
+            estimated_time_seconds=estimated_time
         )
         
     except Exception as e:

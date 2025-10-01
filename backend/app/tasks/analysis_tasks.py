@@ -301,3 +301,180 @@ def run_analysis_task(self, analysis_id: int, product_name: str):
             db.commit()
         
         raise
+
+
+def run_analysis_sync(analysis_id: int, product_name: str):
+    """
+    Synchronous version of the analysis task for DEMO mode (no Celery/Redis needed)
+    
+    This function can be called directly without Celery infrastructure.
+    Used when DEMO_MODE=True in settings.
+    """
+    db = SessionLocal()
+    
+    try:
+        # Update status to in_progress
+        analysis = db.query(Analysis).filter(Analysis.id == analysis_id).first()
+        if not analysis:
+            logger.error(f"Analysis {analysis_id} not found")
+            return {"error": "Analysis not found"}
+        
+        analysis.status = AnalysisStatus.IN_PROGRESS
+        db.commit()
+        
+        logger.info(f"Starting SYNC analysis {analysis_id} for product: {product_name}")
+        
+        # DEMO MODE: Generate sample data
+        from app.models.schemas import ScrapedComment
+        from datetime import datetime, timedelta
+        import random
+        
+        logger.info("DEMO MODE: Using sample data")
+        
+        # Realistic sample comments
+        sample_templates = {
+            'positive': [
+                f"Great {product_name}! Really impressed with the quality and features.",
+                f"Absolutely love my {product_name}! Best purchase ever.",
+                f"The {product_name} exceeded my expectations. Highly recommend!",
+                f"Five stars! {product_name} is exactly what I needed.",
+                f"Best {product_name} on the market. Worth every penny!",
+            ],
+            'negative': [
+                f"Not happy with {product_name}. Customer service was terrible.",
+                f"Disappointed with {product_name}. Expected better quality.",
+                f"The {product_name} broke after just one week. Avoid!",
+                f"Waste of money. {product_name} doesn't work as advertised.",
+                f"Poor quality {product_name}. Don't recommend at all.",
+            ],
+            'neutral': [
+                f"The {product_name} is okay but has some issues with battery life.",
+                f"Average product. Nothing special about {product_name}.",
+                f"{product_name} is decent for the price but could be better.",
+                f"Mixed feelings about {product_name}. Some pros and cons.",
+                f"It's alright. {product_name} does the job but nothing impressive.",
+            ]
+        }
+        
+        sources = ['Amazon', 'Reddit', 'Twitter', 'Trustpilot', 'Google Reviews']
+        comments = []
+        
+        # Generate 15-25 random comments
+        num_comments = random.randint(15, 25)
+        
+        for i in range(num_comments):
+            rand = random.random()
+            if rand < 0.50:  # 50% positive
+                sentiment_type = 'positive'
+            elif rand < 0.80:  # 30% negative
+                sentiment_type = 'negative'
+            else:  # 20% neutral
+                sentiment_type = 'neutral'
+            
+            comment = ScrapedComment(
+                text=random.choice(sample_templates[sentiment_type]),
+                source=random.choice(sources),
+                source_url=f"https://example.com/{product_name.lower().replace(' ', '-')}",
+                author=f"User{i+1}",
+                posted_at=datetime.now() - timedelta(days=random.randint(0, 30))
+            )
+            comments.append(comment)
+        
+        logger.info(f"Generated {len(comments)} sample comments for demo")
+        
+        # Sentiment analysis
+        sentiment_analyzer = get_sentiment_analyzer()
+        texts = [c.text for c in comments]
+        sentiments = sentiment_analyzer.analyze_batch(texts)
+        
+        # Save comments to database
+        comment_objects = []
+        sentiment_scores = []
+        
+        for comment, sentiment in zip(comments, sentiments):
+            sentiment_type = SentimentType(sentiment['sentiment'])
+            
+            db_comment = CustomerComment(
+                product_id=analysis.product_id,
+                analysis_id=analysis_id,
+                text=comment.text,
+                source=comment.source,
+                source_url=comment.source_url,
+                author=comment.author,
+                sentiment=sentiment_type,
+                sentiment_score=sentiment['score'],
+                confidence=sentiment['confidence'],
+                posted_at=comment.posted_at
+            )
+            
+            comment_objects.append(db_comment)
+            sentiment_scores.append(sentiment['score'])
+        
+        db.add_all(comment_objects)
+        
+        # Calculate metrics
+        total = len(comment_objects)
+        positive = sum(1 for c in comment_objects if c.sentiment == SentimentType.POSITIVE)
+        negative = sum(1 for c in comment_objects if c.sentiment == SentimentType.NEGATIVE)
+        neutral = sum(1 for c in comment_objects if c.sentiment == SentimentType.NEUTRAL)
+        
+        avg_sentiment = sum(sentiment_scores) / len(sentiment_scores) if sentiment_scores else 0
+        
+        # Extract topics
+        topics_data = extract_topics(texts, sentiments)
+        
+        topic_objects = []
+        for topic_name, data in topics_data.items():
+            topic = Topic(
+                analysis_id=analysis_id,
+                name=topic_name,
+                count=data['count'],
+                keywords=data['keywords'][:5],
+                avg_sentiment=data['avg_sentiment']
+            )
+            topic_objects.append(topic)
+        
+        db.add_all(topic_objects)
+        
+        # Churn prediction
+        churn_predictor = get_churn_predictor()
+        churn_result = churn_predictor.predict_single(
+            avg_sentiment=avg_sentiment,
+            negative_ratio=negative / total if total > 0 else 0,
+            total_comments=total
+        )
+        
+        # Update analysis with final results
+        analysis.status = AnalysisStatus.COMPLETED
+        analysis.total_comments = total
+        analysis.positive_count = positive
+        analysis.negative_count = negative
+        analysis.neutral_count = neutral
+        analysis.avg_sentiment = avg_sentiment
+        analysis.churn_risk_score = churn_result['churn_probability']
+        analysis.completed_at = datetime.utcnow()
+        
+        db.commit()
+        
+        logger.info(f"SYNC analysis {analysis_id} completed successfully")
+        
+        return {
+            "status": "completed",
+            "analysis_id": analysis_id,
+            "total_comments": total,
+            "avg_sentiment": avg_sentiment
+        }
+        
+    except Exception as e:
+        logger.error(f"Error in SYNC analysis {analysis_id}: {e}", exc_info=True)
+        
+        analysis = db.query(Analysis).filter(Analysis.id == analysis_id).first()
+        if analysis:
+            analysis.status = AnalysisStatus.FAILED
+            analysis.error_message = str(e)
+            db.commit()
+        
+        raise
+    
+    finally:
+        db.close()
