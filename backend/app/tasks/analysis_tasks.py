@@ -428,8 +428,8 @@ def run_analysis_sync(analysis_id: int, product_name: str):
             topic = Topic(
                 analysis_id=analysis_id,
                 name=topic_name,
-                count=data['count'],
-                keywords=data['keywords'][:5],
+                mention_count=data['count'],
+                keywords=", ".join(data['keywords'][:5]),
                 avg_sentiment=data['avg_sentiment']
             )
             topic_objects.append(topic)
@@ -438,10 +438,11 @@ def run_analysis_sync(analysis_id: int, product_name: str):
         
         # Churn prediction
         churn_predictor = get_churn_predictor()
-        churn_result = churn_predictor.predict_single(
+        churn_result = churn_predictor.predict_churn_from_sentiment(
             avg_sentiment=avg_sentiment,
             negative_ratio=negative / total if total > 0 else 0,
-            total_comments=total
+            total_comments=total,
+            sentiment_volatility=0.0
         )
         
         # Update analysis with final results
