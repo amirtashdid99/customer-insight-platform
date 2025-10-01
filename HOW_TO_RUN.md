@@ -29,6 +29,9 @@ start-demo.bat
 
 ### Prerequisites:
 1. **Redis** must be installed and running
+   - Not installed? See **REDIS_SETUP.md** for installation guide
+   - Quick install: `choco install redis-64`
+   - Or use **Demo Mode** instead (no Redis needed)
 
 ### Windows - Mostly Automatic:
 
@@ -43,11 +46,12 @@ start-full.bat
 ```
 
 ### What start-full.bat does automatically:
-1. ✅ Sets `DEMO_MODE=False` in `backend/.env`
-2. ✅ Checks if Redis is running (warns you if not)
-3. ✅ Starts Celery worker in a new window
-4. ✅ Opens frontend in a new window (http://localhost:3000)
-5. ✅ Starts backend server in the current window (http://127.0.0.1:8000)
+1. ✅ Checks if Redis is installed (stops if not)
+2. ✅ Checks if Redis is running (stops if not)
+3. ✅ Sets `DEMO_MODE=False` in `backend/.env`
+4. ✅ Starts Celery worker in a new window
+5. ✅ Opens frontend in a new window (http://localhost:3000)
+6. ✅ Starts backend server in the current window (http://127.0.0.1:8000)
 
 **Just run Redis first, then run start-full.bat - everything else is automatic!**
 
@@ -144,14 +148,35 @@ pip install -r requirements.txt
 
 ### Full Mode Issues:
 
-**"Redis connection refused":**
-```cmd
-# Install Redis (if not installed):
-# Download from: https://github.com/microsoftarchive/redis/releases
+**"Error 10061 connecting to localhost:6379" or "Redis connection refused":**
 
-# Start Redis:
-redis-server
-```
+This means Redis is not running! Here's what to do:
+
+1. **Check if Redis is installed:**
+   ```cmd
+   where redis-server
+   ```
+
+2. **If not installed, install Redis:**
+   - See **REDIS_SETUP.md** for detailed instructions
+   - Quick install with Chocolatey: `choco install redis-64`
+   - Or download from: https://github.com/microsoftarchive/redis/releases
+
+3. **Start Redis:**
+   ```cmd
+   redis-server
+   ```
+
+4. **Test Redis connection:**
+   ```cmd
+   redis-cli ping
+   ```
+   Should respond with: `PONG`
+
+5. **Alternative: Use Demo Mode** (no Redis needed):
+   ```cmd
+   start-demo.bat
+   ```
 
 **Celery worker not starting:**
 ```cmd
