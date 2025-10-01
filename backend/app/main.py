@@ -70,7 +70,8 @@ async def root():
     return {
         "message": "Customer Insight Platform API",
         "version": settings.APP_VERSION,
-        "status": "running"
+        "status": "running",
+        "demo_mode": settings.DEMO_MODE
     }
 
 
