@@ -16,6 +16,9 @@ class Settings(BaseSettings):
     # Redis (for background tasks)
     REDIS_URL: str = "redis://localhost:6379/0"
     
+    # Demo Mode (use mock data instead of real scraping)
+    DEMO_MODE: bool = False
+    
     # Security
     SECRET_KEY: str
     ALGORITHM: str = "HS256"

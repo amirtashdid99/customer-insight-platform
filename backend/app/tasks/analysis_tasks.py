@@ -106,61 +106,95 @@ def run_analysis_task(self, analysis_id: int, product_name: str):
         # Update task progress
         self.update_state(state='PROGRESS', meta={'step': 'scraping', 'progress': 10})
         
-        # Step 1: Generate sample data (for demo - avoids timeout issues)
-        from app.models.schemas import ScrapedComment
-        from datetime import datetime, timedelta
-        import random
-        
-        # Realistic sample comments
-        sample_templates = {
-            'positive': [
-                f"Great {product_name}! Really impressed with the quality and features.",
-                f"Absolutely love my {product_name}! Best purchase ever.",
-                f"The {product_name} exceeded my expectations. Highly recommend!",
-                f"Five stars! {product_name} is exactly what I needed.",
-                f"Best {product_name} on the market. Worth every penny!",
-            ],
-            'negative': [
-                f"Not happy with {product_name}. Customer service was terrible.",
-                f"Disappointed with {product_name}. Expected better quality.",
-                f"The {product_name} broke after just one week. Avoid!",
-                f"Waste of money. {product_name} doesn't work as advertised.",
-                f"Poor quality {product_name}. Don't recommend at all.",
-            ],
-            'neutral': [
-                f"The {product_name} is okay but has some issues with battery life.",
-                f"Average product. Nothing special about {product_name}.",
-                f"{product_name} is decent for the price but could be better.",
-                f"Mixed feelings about {product_name}. Some pros and cons.",
-                f"It's alright. {product_name} does the job but nothing impressive.",
-            ]
-        }
-        
-        sources = ['Amazon', 'Reddit', 'Twitter', 'Trustpilot', 'Google Reviews']
-        comments = []
-        
-        # Generate 15-25 random comments with mixed sentiment
-        num_comments = random.randint(15, 25)
-        
-        for i in range(num_comments):
-            rand = random.random()
-            if rand < 0.50:  # 50% positive
-                sentiment_type = 'positive'
-            elif rand < 0.80:  # 30% negative
-                sentiment_type = 'negative'
-            else:  # 20% neutral
-                sentiment_type = 'neutral'
+        # Step 1: Scrape or generate data based on DEMO_MODE
+        if settings.DEMO_MODE:
+            # Demo Mode: Use sample data (for online demo)
+            from app.models.schemas import ScrapedComment
+            from datetime import datetime, timedelta
+            import random
             
-            comment = ScrapedComment(
-                text=random.choice(sample_templates[sentiment_type]),
-                source=random.choice(sources),
-                source_url=f"https://example.com/{product_name.lower().replace(' ', '-')}",
-                author=f"User{i+1}",
-                posted_at=datetime.now() - timedelta(days=random.randint(0, 30))
+            logger.info("DEMO MODE: Using sample data")
+            
+            # Realistic sample comments
+            sample_templates = {
+                'positive': [
+                    f"Great {product_name}! Really impressed with the quality and features.",
+                    f"Absolutely love my {product_name}! Best purchase ever.",
+                    f"The {product_name} exceeded my expectations. Highly recommend!",
+                    f"Five stars! {product_name} is exactly what I needed.",
+                    f"Best {product_name} on the market. Worth every penny!",
+                ],
+                'negative': [
+                    f"Not happy with {product_name}. Customer service was terrible.",
+                    f"Disappointed with {product_name}. Expected better quality.",
+                    f"The {product_name} broke after just one week. Avoid!",
+                    f"Waste of money. {product_name} doesn't work as advertised.",
+                    f"Poor quality {product_name}. Don't recommend at all.",
+                ],
+                'neutral': [
+                    f"The {product_name} is okay but has some issues with battery life.",
+                    f"Average product. Nothing special about {product_name}.",
+                    f"{product_name} is decent for the price but could be better.",
+                    f"Mixed feelings about {product_name}. Some pros and cons.",
+                    f"It's alright. {product_name} does the job but nothing impressive.",
+                ]
+            }
+            
+            sources = ['Amazon', 'Reddit', 'Twitter', 'Trustpilot', 'Google Reviews']
+            comments = []
+            
+            # Generate 15-25 random comments with mixed sentiment
+            num_comments = random.randint(15, 25)
+            
+            for i in range(num_comments):
+                rand = random.random()
+                if rand < 0.50:  # 50% positive
+                    sentiment_type = 'positive'
+                elif rand < 0.80:  # 30% negative
+                    sentiment_type = 'negative'
+                else:  # 20% neutral
+                    sentiment_type = 'neutral'
+                
+                comment = ScrapedComment(
+                    text=random.choice(sample_templates[sentiment_type]),
+                    source=random.choice(sources),
+                    source_url=f"https://example.com/{product_name.lower().replace(' ', '-')}",
+                    author=f"User{i+1}",
+                    posted_at=datetime.now() - timedelta(days=random.randint(0, 30))
+                )
+                comments.append(comment)
+            
+            logger.info(f"Generated {len(comments)} sample comments for demo")
+        else:
+            # Production Mode: Real web scraping
+            import asyncio
+            
+            logger.info("PRODUCTION MODE: Real web scraping")
+            scraper = create_scraper(
+                user_agent=settings.USER_AGENT,
+                timeout=settings.SCRAPE_TIMEOUT
             )
-            comments.append(comment)
-        
-        logger.info(f"Generated {len(comments)} sample comments for demo")
+            
+            # Run async scraping in sync context
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+            try:
+                comments = loop.run_until_complete(
+                    scraper.scrape_all_sources(
+                        product_name,
+                        max_results=settings.MAX_SCRAPE_RESULTS
+                    )
+                )
+            finally:
+                loop.close()
+            
+            if not comments:
+                analysis.status = AnalysisStatus.FAILED
+                analysis.error_message = "No comments found"
+                db.commit()
+                return {"error": "No comments found"}
+            
+            logger.info(f"Scraped {len(comments)} real comments")
         self.update_state(state='PROGRESS', meta={'step': 'sentiment_analysis', 'progress': 40})
         
         # Step 2: Sentiment analysis
