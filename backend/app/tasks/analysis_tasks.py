@@ -198,9 +198,25 @@ def run_analysis_task(self, analysis_id: int, product_name: str):
         self.update_state(state='PROGRESS', meta={'step': 'sentiment_analysis', 'progress': 40})
         
         # Step 2: Sentiment analysis
-        sentiment_analyzer = get_sentiment_analyzer()
-        texts = [c.text for c in comments]
-        sentiments = sentiment_analyzer.analyze_batch(texts)
+        if settings.DEMO_MODE:
+            # Demo Mode: Use lightweight mock sentiment analysis (no ML models)
+            logger.info("DEMO MODE: Using mock sentiment analysis")
+            sentiments = []
+            for comment in comments:
+                text_lower = comment.text.lower()
+                # Simple keyword-based sentiment (lightweight)
+                if any(word in text_lower for word in ['great', 'love', 'excellent', 'best', 'impressed', 'amazing']):
+                    sentiments.append({'sentiment': 'positive', 'score': 0.85, 'confidence': 0.9})
+                elif any(word in text_lower for word in ['terrible', 'worst', 'hate', 'awful', 'disappointed', 'poor', 'broke', 'waste']):
+                    sentiments.append({'sentiment': 'negative', 'score': 0.15, 'confidence': 0.9})
+                else:
+                    sentiments.append({'sentiment': 'neutral', 'score': 0.5, 'confidence': 0.8})
+        else:
+            # Production Mode: Use real ML model sentiment analysis
+            logger.info("PRODUCTION MODE: Using ML model for sentiment analysis")
+            sentiment_analyzer = get_sentiment_analyzer()
+            texts = [c.text for c in comments]
+            sentiments = sentiment_analyzer.analyze_batch(texts)
         
         self.update_state(state='PROGRESS', meta={'step': 'saving_data', 'progress': 60})
         
@@ -240,17 +256,28 @@ def run_analysis_task(self, analysis_id: int, product_name: str):
         avg_sentiment = sum(sentiment_scores) / len(sentiment_scores) if sentiment_scores else 0
         
         # Step 5: Predict churn risk
-        churn_predictor = get_churn_predictor()
-        
-        negative_ratio = negative / total if total > 0 else 0
-        sentiment_volatility = sum(abs(s - avg_sentiment) for s in sentiment_scores) / len(sentiment_scores) if sentiment_scores else 0
-        
-        churn_result = churn_predictor.predict_churn_from_sentiment(
-            avg_sentiment=avg_sentiment,
-            negative_ratio=negative_ratio,
-            total_comments=total,
-            sentiment_volatility=sentiment_volatility
-        )
+        if settings.DEMO_MODE:
+            # Demo Mode: Use simple calculation (no ML model)
+            logger.info("DEMO MODE: Using mock churn prediction")
+            # Simple rule-based churn prediction
+            churn_result = {
+                'churn_probability': min(0.9, negative_ratio * 1.5 + (1 - avg_sentiment)) if negative_ratio > 0.3 else 0.2,
+                'risk_factors': ['Negative sentiment ratio', 'Low average sentiment'] if negative_ratio > 0.3 else []
+            }
+        else:
+            # Production Mode: Use real ML model
+            logger.info("PRODUCTION MODE: Using ML model for churn prediction")
+            churn_predictor = get_churn_predictor()
+            
+            negative_ratio = negative / total if total > 0 else 0
+            sentiment_volatility = sum(abs(s - avg_sentiment) for s in sentiment_scores) / len(sentiment_scores) if sentiment_scores else 0
+            
+            churn_result = churn_predictor.predict_churn_from_sentiment(
+                avg_sentiment=avg_sentiment,
+                negative_ratio=negative_ratio,
+                total_comments=total,
+                sentiment_volatility=sentiment_volatility
+            )
         
         self.update_state(state='PROGRESS', meta={'step': 'extracting_topics', 'progress': 85})
         
@@ -382,10 +409,20 @@ def run_analysis_sync(analysis_id: int, product_name: str):
         
         logger.info(f"Generated {len(comments)} sample comments for demo")
         
-        # Sentiment analysis
-        sentiment_analyzer = get_sentiment_analyzer()
+        # Sentiment analysis - LIGHTWEIGHT (no ML models)
+        logger.info("DEMO MODE: Using lightweight mock sentiment analysis")
+        sentiments = []
+        for comment in comments:
+            text_lower = comment.text.lower()
+            # Simple keyword-based sentiment
+            if any(word in text_lower for word in ['great', 'love', 'excellent', 'best', 'impressed', 'amazing', 'five stars']):
+                sentiments.append({'sentiment': 'positive', 'score': 0.85, 'confidence': 0.9})
+            elif any(word in text_lower for word in ['terrible', 'worst', 'hate', 'awful', 'disappointed', 'poor', 'broke', 'waste']):
+                sentiments.append({'sentiment': 'negative', 'score': 0.15, 'confidence': 0.9})
+            else:
+                sentiments.append({'sentiment': 'neutral', 'score': 0.5, 'confidence': 0.8})
+        
         texts = [c.text for c in comments]
-        sentiments = sentiment_analyzer.analyze_batch(texts)
         
         # Save comments to database
         comment_objects = []
@@ -436,14 +473,14 @@ def run_analysis_sync(analysis_id: int, product_name: str):
         
         db.add_all(topic_objects)
         
-        # Churn prediction
-        churn_predictor = get_churn_predictor()
-        churn_result = churn_predictor.predict_churn_from_sentiment(
-            avg_sentiment=avg_sentiment,
-            negative_ratio=negative / total if total > 0 else 0,
-            total_comments=total,
-            sentiment_volatility=0.0
-        )
+        # Churn prediction - LIGHTWEIGHT (no ML model)
+        logger.info("DEMO MODE: Using lightweight mock churn prediction")
+        negative_ratio = negative / total if total > 0 else 0
+        # Simple rule-based churn prediction
+        churn_result = {
+            'churn_probability': min(0.9, negative_ratio * 1.5 + (1 - avg_sentiment)) if negative_ratio > 0.3 else 0.2,
+            'risk_factors': ['Negative sentiment ratio', 'Low average sentiment'] if negative_ratio > 0.3 else []
+        }
         
         # Update analysis with final results
         analysis.status = AnalysisStatus.COMPLETED
