@@ -20,12 +20,12 @@ Analyzes customer reviews from multiple sources to provide actionable business i
 - **Topic Modeling**: Automatic identification of key themes in customer feedback
 - **Interactive Dashboard**: Beautiful real-time visualizations with Recharts
 
-### 🎉 NEW: Enterprise Features
+### 🎉 Enterprise Features
 - **🔐 User Authentication**: Secure JWT-based login system with bcrypt password hashing
 - **📧 Smart Email Alerts**: Automatic notifications when sentiment spikes are detected (>20% change)
 - **⭐ Saved Products**: Personal dashboard to track favorite products over time
 - **📊 Sentiment Tracking**: Monitor sentiment trends and get proactive alerts
-- **🎨 Responsive Design**: Beautiful UI that works on mobile, tablet, and desktop
+- **🎨 Responsive Design**: Mobile-first UI that works on all devices
 
 ## 🛠️ Tech Stack
 
@@ -59,95 +59,49 @@ Analyzes customer reviews from multiple sources to provide actionable business i
 
 ## 📁 Project Structure
 
-- **Celery** - Distributed task queue for background processing
-
-- **Redis** - Message broker and caching### Machine Learning
-
-- **SQLAlchemy** - SQL toolkit and ORM- Transformers (Hugging Face) for sentiment analysis
-
-- **PyTorch & Transformers** - Deep learning for NLP- XGBoost for churn prediction
-
-- **XGBoost** - Machine learning for churn prediction- scikit-learn for preprocessing
-
-- **BeautifulSoup & aiohttp** - Web scraping- NLTK for text processing
-
-
-
-### Frontend## 📁 Project Structure
-
-- **React 18** - UI library
-
-- **TypeScript** - Type-safe JavaScript```
-
-- **Recharts** - Data visualizationproject1/
-
-- **Axios** - HTTP client├── backend/                # FastAPI backend
-
+```
+customer-insight-platform/
+├── backend/                  # FastAPI backend
 │   ├── app/
+│   │   ├── api/             # API endpoints (analysis, auth, notifications)
+│   │   ├── core/            # Configuration & database
+│   │   ├── ml/              # ML models (sentiment, churn)
+│   │   ├── models/          # Database & Pydantic models
+│   │   ├── scrapers/        # Web scraping logic
+│   │   └── tasks/           # Background tasks
+│   ├── alembic/             # Database migrations
+│   ├── requirements.txt     # Python dependencies
+│   └── .env                 # Environment variables
+├── frontend/                # React frontend
+│   ├── src/
+│   │   ├── components/      # React components
+│   │   ├── services/        # API client
+│   │   └── App.tsx          # Main application
+│   └── package.json         # Node dependencies
+├── ml_training/             # ML model training scripts
+│   ├── notebooks/           # Jupyter notebooks
+│   └── datasets/            # Training data
+└── trained_models/          # Saved ML models
+```
 
-## Project Structure│   │   ├── api/           # API endpoints
+## 🎯 Project Status
 
-│   │   ├── models/        # Database models
+- ✅ Database & ML Models Setup
+- ✅ Backend API Development (FastAPI + Authentication)
+- ✅ Frontend Development (React + TypeScript)
+- ✅ Deployment (Render + Vercel)
+- ✅ Enterprise Features (Auth, Alerts, Saved Products)
 
-```│   │   ├── ml/            # ML models & training
+## 🚀 Getting Started
 
-customer-insight-platform/│   │   ├── scrapers/      # Web scraping logic
-
-├── backend/│   │   └── core/          # Configuration
-
-│   ├── app/│   ├── alembic/           # Database migrations
-
-│   │   ├── api/              # API endpoints│   └── requirements.txt
-
-│   │   ├── core/             # Config, database, Celery├── frontend/              # React frontend
-
-│   │   ├── models/           # Database & Pydantic models│   ├── src/
-
-│   │   ├── ml/               # ML models (sentiment, churn)│   │   ├── components/
-
-│   │   ├── scrapers/         # Web scraping logic│   │   ├── pages/
-
-│   │   └── tasks/            # Celery background tasks│   │   ├── services/
-
-│   ├── requirements.txt│   │   └── utils/
-
-│   ├── worker.py             # Celery worker entry point│   └── package.json
-
-│   └── .env.example└── ml_training/           # ML model training notebooks
-
-├── frontend/    ├── notebooks/
-
-│   ├── src/    └── datasets/
-
-│   │   ├── components/       # React components```
-
-│   │   ├── services/         # API client
-
-│   │   └── App.tsx## 🎯 Current Progress
-
-│   └── package.json
-
-└── README.md- [x] Phase 1: Database & ML Models Setup ✅
-
-```- [x] Phase 2: Backend API Development ✅
-
-- [x] Phase 3: Frontend Development ✅
-
-## Local Development Setup- [ ] Phase 4: Testing & Deployment
-
-
-
-### Prerequisites## 🚀 Getting Started
+### Prerequisites
 
 - Python 3.9+
-
-- Node.js 16+### Prerequisites
-
-- Redis server- Python 3.9+
-
 - Node.js 16+
+- Redis server (for full mode with background tasks)
+- PostgreSQL 14+ (optional, SQLite works for development)
 
-### 1. Clone Repository- PostgreSQL 14+
+### 1. Clone Repository
 
 ```bash
 
