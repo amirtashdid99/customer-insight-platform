@@ -28,10 +28,10 @@ This guide shows how to deploy your Customer Insight Platform using modern cloud
          │
     ┌────┴─────┬─────────────┬──────────────┐
     ▼          ▼             ▼              ▼
-┌────────┐ ┌────────┐  ┌────────────┐  ┌───────┐
-│AWS RDS │ │AWS S3  │  │Lambda      │  │AWS SES│
-│(PostgreSQL)│(Raw Data)│(Scraping)  │  │(Email)│
-└────────┘ └────────┘  └────────────┘  └───────┘
+┌────────┐    ┌────────┐  ┌────────────┐  ┌───────┐
+│AWS RDS │    │AWS S3    │  │Lambda      │  │AWS SES│
+│(PostgreSQL) │(Raw Data)│(Scraping) │ │(Email)│
+└────────┘    └────────┘  └────────────┘  └───────┘
                              ▲
                              │ Trigger
                         ┌────┴─────┐
