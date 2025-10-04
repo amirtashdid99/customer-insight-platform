@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Float, DateTime, Text, ForeignKey, Enum
+from sqlalchemy import Column, Integer, String, Float, DateTime, Text, ForeignKey, Enum, Boolean
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 import enum
@@ -106,3 +106,60 @@ class Topic(Base):
     
     # Relationships
     analysis = relationship("Analysis", back_populates="topics")
+
+
+class User(Base):
+    """User accounts for authentication"""
+    __tablename__ = "users"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    email = Column(String(255), unique=True, nullable=False, index=True)
+    hashed_password = Column(String(255), nullable=False)
+    full_name = Column(String(255), nullable=False)
+    
+    is_active = Column(Boolean, default=True)
+    is_admin = Column(Boolean, default=False)
+    
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    last_login = Column(DateTime(timezone=True), nullable=True)
+    
+    # Relationships
+    notification_preferences = relationship("NotificationPreference", back_populates="user", cascade="all, delete-orphan")
+    saved_products = relationship("SavedProduct", back_populates="user", cascade="all, delete-orphan")
+
+
+class NotificationPreference(Base):
+    """User notification settings for products"""
+    __tablename__ = "notification_preferences"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    product_id = Column(Integer, ForeignKey("products.id"), nullable=False)
+    
+    email_alerts = Column(Boolean, default=True)
+    sentiment_threshold = Column(Float, default=0.2)  # Alert if change > 20%
+    
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+    
+    # Relationships
+    user = relationship("User", back_populates="notification_preferences")
+    product = relationship("Product")
+
+
+class SavedProduct(Base):
+    """Products saved/tracked by users"""
+    __tablename__ = "saved_products"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    product_id = Column(Integer, ForeignKey("products.id"), nullable=False)
+    
+    nickname = Column(String(255), nullable=True)  # Optional custom name
+    notes = Column(Text, nullable=True)
+    
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    
+    # Relationships
+    user = relationship("User", back_populates="saved_products")
+    product = relationship("Product")

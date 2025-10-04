@@ -1,52 +1,63 @@
-# Customer Insight Platform# Customer Insight Platform 🎯
+# Customer Insight Platform 🎯
 
+**A full-stack AI-powered customer sentiment analysis and churn prediction platform with enterprise features.**
 
+Analyzes customer reviews from multiple sources to provide actionable business intelligence with real-time alerts and user accounts.
 
-Full-stack AI-powered customer sentiment analysis and churn prediction platform. Analyzes customer reviews from multiple sources to provide actionable business intelligence.A full-stack web application that provides real-time customer sentiment analysis and churn prediction for any product or company.
+## Developer
 
+**Amir Hossein Nasserpour**
+- Email: amirtashdid99@gmail.com
+- Telegram: [@R00T99](https://t.me/R00T99)
+- GitHub: [@amirtashdid99](https://github.com/amirtashdid99)
 
+## 🚀 Features
 
-## Developer## 🚀 Features
+### Core AI/ML Features
+- **Real-time Data Scraping**: Fetch live customer reviews from multiple sources (Reddit, Twitter, Review Sites)
+- **Sentiment Analysis**: AI-powered classification using DistilBERT transformer (95%+ accuracy)
+- **Churn Prediction**: ML-based customer retention risk assessment using XGBoost
+- **Topic Modeling**: Automatic identification of key themes in customer feedback
+- **Interactive Dashboard**: Beautiful real-time visualizations with Recharts
 
-
-
-**Amir Hossein Nasserpour**- **Real-time Data Scraping**: Fetch live customer reviews and comments from multiple sources
-
-- Email: amirtashdid99@gmail.com- **Sentiment Analysis**: AI-powered sentiment classification (Positive/Negative/Neutral)
-
-- Telegram: [@R00T99](https://t.me/R00T99)- **Churn Prediction**: ML-based risk assessment for customer retention
-
-- GitHub: [@amirtashdid99](https://github.com/amirtashdid99)- **Interactive Dashboard**: Beautiful visualizations of customer insights
-
-- **Topic Modeling**: Identify key themes in customer feedback
-
-## Features
+### 🎉 NEW: Enterprise Features
+- **🔐 User Authentication**: Secure JWT-based login system with bcrypt password hashing
+- **📧 Smart Email Alerts**: Automatic notifications when sentiment spikes are detected (>20% change)
+- **⭐ Saved Products**: Personal dashboard to track favorite products over time
+- **📊 Sentiment Tracking**: Monitor sentiment trends and get proactive alerts
+- **🎨 Responsive Design**: Beautiful UI that works on mobile, tablet, and desktop
 
 ## 🛠️ Tech Stack
 
-- **Multi-Source Scraping**: Aggregates reviews from Amazon, Reddit, Twitter, Trustpilot, and more
-
-- **Sentiment Analysis**: Using DistilBERT transformer model for accurate sentiment classification### Frontend
-
-- **Churn Prediction**: ML-powered customer churn risk assessment- React.js with TypeScript
-
-- **Topic Extraction**: Automatic identification of key themes in customer feedback- Recharts for data visualization
-
-- **Real-time Processing**: Async background job processing with Celery and Redis- Tailwind CSS for styling
-
-- **Interactive Dashboard**: Beautiful data visualizations with Recharts- Axios for API calls
-
-- **RESTful API**: FastAPI backend with automatic OpenAPI documentation
+### Frontend
+- React.js with TypeScript
+- Recharts for data visualization
+- Responsive CSS with media queries
+- Axios for API calls
 
 ### Backend
+- FastAPI (Python) with automatic OpenAPI docs
+- PostgreSQL/SQLite database
+- SQLAlchemy ORM
+- Pydantic for data validation
+- **JWT Authentication** with python-jose
+- **Bcrypt Password Hashing** with passlib
+- Email integration with SMTP
 
-## Tech Stack- FastAPI (Python)
+### Machine Learning
+- Transformers (Hugging Face) for sentiment analysis (DistilBERT)
+- XGBoost for churn prediction
+- scikit-learn for preprocessing
+- NLTK for text processing
 
-- PostgreSQL database
+### Infrastructure
+- **Celery** - Distributed task queue for background processing
+- **Redis** - Message broker and caching
+- **BeautifulSoup & aiohttp** - Web scraping
+- **Render** - Backend hosting (512MB free tier)
+- **Vercel** - Frontend hosting
 
-### Backend- SQLAlchemy ORM
-
-- **FastAPI** - Modern Python web framework- Pydantic for data validation
+## 📁 Project Structure
 
 - **Celery** - Distributed task queue for background processing
 

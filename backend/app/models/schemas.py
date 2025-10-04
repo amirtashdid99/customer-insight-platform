@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field, ConfigDict
+from pydantic import BaseModel, Field, ConfigDict, EmailStr
 from typing import Optional, List
 from datetime import datetime
 from app.models.database_models import SentimentType, AnalysisStatus
@@ -114,3 +114,64 @@ class AnalysisJobResponse(BaseModel):
         default=60,
         description="Estimated time to complete analysis"
     )
+
+
+# User & Authentication Schemas
+class UserBase(BaseModel):
+    email: EmailStr
+    full_name: str = Field(..., min_length=1, max_length=255)
+
+
+class UserCreate(UserBase):
+    password: str = Field(..., min_length=8, description="Password must be at least 8 characters")
+
+
+class UserResponse(UserBase):
+    id: int
+    is_active: bool
+    is_admin: bool
+    created_at: datetime
+    last_login: Optional[datetime] = None
+    
+    model_config = ConfigDict(from_attributes=True)
+
+
+class Token(BaseModel):
+    access_token: str
+    token_type: str = "bearer"
+
+
+class TokenData(BaseModel):
+    user_id: Optional[int] = None
+
+
+# Notification Schemas
+class NotificationPreferenceCreate(BaseModel):
+    product_name: str
+    email_alerts: bool = True
+    sentiment_threshold: float = Field(default=0.2, ge=0.0, le=1.0)
+
+
+class NotificationResponse(BaseModel):
+    message: str
+    product_name: str
+    email_alerts: bool
+
+
+# Saved Products Schemas
+class SavedProductCreate(BaseModel):
+    product_name: str
+    nickname: Optional[str] = None
+    notes: Optional[str] = None
+
+
+class SavedProductResponse(BaseModel):
+    id: int
+    product_name: str
+    nickname: Optional[str] = None
+    notes: Optional[str] = None
+    created_at: datetime
+    last_analysis: Optional[datetime] = None
+    latest_sentiment: Optional[str] = None
+    
+    model_config = ConfigDict(from_attributes=True)

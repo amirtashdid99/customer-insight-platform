@@ -12,6 +12,9 @@ import logging
 from app.core.config import settings
 from app.core.database import Base, engine
 from app.api import analysis_router
+from app.api.auth import router as auth_router
+from app.api.notifications import router as notifications_router
+from app.api.saved_products import router as saved_products_router
 
 # Configure logging
 logging.basicConfig(
@@ -62,6 +65,9 @@ app.add_middleware(
 
 # Include routers
 app.include_router(analysis_router, prefix="/api")
+app.include_router(auth_router, prefix="/api")
+app.include_router(notifications_router, prefix="/api")
+app.include_router(saved_products_router, prefix="/api")
 
 
 @app.get("/")

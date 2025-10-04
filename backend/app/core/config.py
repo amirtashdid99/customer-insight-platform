@@ -27,6 +27,15 @@ class Settings(BaseSettings):
     # CORS
     ALLOWED_ORIGINS: str = "http://localhost:3000"
     
+    # Email (for notifications)
+    EMAIL_HOST: str = "smtp.gmail.com"
+    EMAIL_PORT: int = 587
+    EMAIL_USERNAME: str = ""  # Optional: Set for email alerts
+    EMAIL_PASSWORD: str = ""  # Optional: App password for Gmail
+    
+    # Frontend URL (for email links)
+    FRONTEND_URL: str = "http://localhost:3000"
+    
     @property
     def cors_origins(self) -> List[str]:
         return [origin.strip() for origin in self.ALLOWED_ORIGINS.split(",")]
