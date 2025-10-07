@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        canvas {
+            border: 1px solid #ddd;
+            margin: 20px;
+        }
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h2>Favicon Generator</h2>
+    <p>Copy the data URL below and use it to create favicon.ico or favicon.png</p>
+    <canvas id="canvas" width="64" height="64"></canvas>
+    <div>
+        <button onclick="download32()">Download 32x32</button>
+        <button onclick="download64()">Download 64x64</button>
+        <button onclick="download512()">Download 512x512 (Apple Touch Icon)</button>
+    </div>
+    
+    <script>
+        function drawFavicon(size) {
+            const canvas = document.createElement('canvas');
+            canvas.width = size;
+            canvas.height = size;
+            const ctx = canvas.getContext('2d');
+            
+            // Create gradient background
+            const gradient = ctx.createLinearGradient(0, 0, size, size);
+            gradient.addColorStop(0, '#667eea');
+            gradient.addColorStop(1, '#764ba2');
+            
+            // Draw rounded rectangle background
+            const radius = size * 0.1875; // 12/64
+            ctx.fillStyle = gradient;
+            ctx.beginPath();
+            ctx.moveTo(radius, 0);
+            ctx.lineTo(size - radius, 0);
+            ctx.quadraticCurveTo(size, 0, size, radius);
+            ctx.lineTo(size, size - radius);
+            ctx.quadraticCurveTo(size, size, size - radius, size);
+            ctx.lineTo(radius, size);
+            ctx.quadraticCurveTo(0, size, 0, size - radius);
+            ctx.lineTo(0, radius);
+            ctx.quadraticCurveTo(0, 0, radius, 0);
+            ctx.fill();
+            
+            // Draw letter A
+            ctx.fillStyle = 'white';
+            ctx.font = `bold ${size * 0.65625}px Arial`; // 42/64
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('A', size / 2, size / 2 + size * 0.05);
+            
+            // Draw accent dot
+            ctx.globalAlpha = 0.8;
+            ctx.beginPath();
+            ctx.arc(size * 0.78125, size * 0.25, size * 0.0625, 0, Math.PI * 2);
+            ctx.fill();
+            
+            return canvas;
+        }
+        
+        // Draw preview
+        const previewCanvas = document.getElementById('canvas');
+        const previewCtx = previewCanvas.getContext('2d');
+        const preview = drawFavicon(64);
+        previewCtx.drawImage(preview, 0, 0);
+        
+        function download32() {
+            const canvas = drawFavicon(32);
+            const link = document.createElement('a');
+            link.download = 'favicon-32x32.png';
+            link.href = canvas.toDataURL();
+            link.click();
+        }
+        
+        function download64() {
+            const canvas = drawFavicon(64);
+            const link = document.createElement('a');
+            link.download = 'favicon-64x64.png';
+            link.href = canvas.toDataURL();
+            link.click();
+        }
+        
+        function download512() {
+            const canvas = drawFavicon(512);
+            const link = document.createElement('a');
+            link.download = 'apple-touch-icon.png';
+            link.href = canvas.toDataURL();
+            link.click();
+        }
+    </script>
+</body>
+</html>
